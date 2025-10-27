@@ -8,10 +8,12 @@ import net.adhikary.mrtbuddy.data.CardExport
 import net.adhikary.mrtbuddy.data.CardExportData
 import net.adhikary.mrtbuddy.data.TransactionEntity
 import net.adhikary.mrtbuddy.data.TransactionExportData
+import net.adhikary.mrtbuddy.data.ScanEntity
 
 class CardExportRepository(
     private val cardDao: net.adhikary.mrtbuddy.dao.CardDao,
-    private val transactionDao: net.adhikary.mrtbuddy.dao.TransactionDao
+    private val transactionDao: net.adhikary.mrtbuddy.dao.TransactionDao,
+    private val scanDao: net.adhikary.mrtbuddy.dao.ScanDao
 ) {
     private val json = Json {
         prettyPrint = true
@@ -74,11 +76,18 @@ class CardExportRepository(
                     )
                     cardDao.insertCard(cardEntity)
 
-                    // Insert transactions
+                    // Create a scan record for imported transactions
+                    val scanRecord = ScanEntity(
+                        cardIdm = cardData.idm,
+                        timestamp = cardData.lastScanTime ?: Clock.System.now().toEpochMilliseconds()
+                    )
+                    val scanId = scanDao.insertScan(scanRecord)
+
+                    // Insert transactions with the created scanId
                     val transactionEntities = cardData.transactions.map { transactionData ->
                         TransactionEntity(
                             cardIdm = transactionData.cardIdm,
-                            scanId = 0, // We'll use 0 for imported transactions
+                            scanId = scanId,
                             fromStation = transactionData.fromStation,
                             toStation = transactionData.toStation,
                             balance = transactionData.balance,

@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "exportDate": 1732719400,
+  "cards": [
+    {
+      "idm": "0123456789ABCDEF",
+      "name": "Test Card 1",
+      "lastScanTime": 1732719400000,
+      "transactions": [
+        {
+          "cardIdm": "0123456789ABCDEF",
+          "fromStation": "Kamlapur",
+          "toStation": "Shahbagh",
+          "balance": 150,
+          "dateTime": 1732719400000,
+          "fixedHeader": "00FF",
+          "order": 1
+        },
+        {
+          "cardIdm": "0123456789ABCDEF",
+          "fromStation": "Shahbagh",
+          "toStation": "Mirpur 10",
+          "balance": 100,
+          "dateTime": 1732719300000,
+          "fixedHeader": "00FF",
+          "order": 2
+        }
+      ]
+    },
+    {
+      "idm": "FEDCBA9876543210",
+      "name": "Test Card 2",
+      "lastScanTime": 1732719500000,
+      "transactions": [
+        {
+          "cardIdm": "FEDCBA9876543210",
+          "fromStation": "Uttara",
+          "toStation": "Airport",
+          "balance": 200,
+          "dateTime": 1732719500000,
+          "fixedHeader": "00FF",
+          "order": 1
+        }
+      ]
+    }
+  ]
+}

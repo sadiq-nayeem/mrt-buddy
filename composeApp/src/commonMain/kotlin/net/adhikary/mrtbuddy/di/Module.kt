@@ -34,7 +34,8 @@ val appModule = module {
     ) }
     single { CardExportRepository(
         cardDao = get(),
-        transactionDao = get()
+        transactionDao = get(),
+        scanDao = get()
     ) }
     single { ClipboardService() }
 
