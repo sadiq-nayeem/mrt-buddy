@@ -81,11 +81,11 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "net.adhikary.mrtbuddy"
+        applicationId = "net.adhikary.mrtbuddy.blue"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 23
-        versionName = "0.0.23"
+        versionCode = 24
+        versionName = "0.0.24-blue"
     }
     packaging {
         resources {
@@ -106,7 +106,8 @@ android {
     }
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            // Temporarily disable signing for testing
+            // signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
