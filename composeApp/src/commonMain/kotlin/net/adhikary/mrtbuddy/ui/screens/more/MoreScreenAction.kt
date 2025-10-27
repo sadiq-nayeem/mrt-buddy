@@ -6,4 +6,6 @@ sealed interface MoreScreenAction {
     data class SetLanguage(val language: String) : MoreScreenAction
     object StationMap : MoreScreenAction
     object OpenLicenses : MoreScreenAction
+    object ExportCards : MoreScreenAction
+    data class ImportCards(val jsonData: String) : MoreScreenAction
 }

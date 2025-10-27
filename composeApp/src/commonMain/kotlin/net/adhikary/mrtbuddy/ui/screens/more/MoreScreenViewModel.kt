@@ -9,10 +9,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import net.adhikary.mrtbuddy.changeLang
+import net.adhikary.mrtbuddy.repository.CardExportRepository
+import net.adhikary.mrtbuddy.repository.ImportResult
 import net.adhikary.mrtbuddy.repository.SettingsRepository
+import net.adhikary.mrtbuddy.service.ClipboardService
 
 class MoreScreenViewModel(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val cardExportRepository: CardExportRepository,
+    private val clipboardService: ClipboardService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MoreScreenState())
@@ -77,6 +82,32 @@ class MoreScreenViewModel(
                     _events.send(MoreScreenEvent.NavigateTooStationMap)
                 }
             }
+
+            is MoreScreenAction.ExportCards -> {
+                viewModelScope.launch {
+                    try {
+                        val jsonData = cardExportRepository.exportAllCards()
+                        _events.send(MoreScreenEvent.CardsExported(jsonData))
+                    } catch (e: Exception) {
+                        _events.send(MoreScreenEvent.Error(e.message ?: "Failed to export cards"))
+                    }
+                }
+            }
+
+            is MoreScreenAction.ImportCards -> {
+                viewModelScope.launch {
+                    try {
+                        val result = cardExportRepository.importCards(action.jsonData)
+                        _events.send(MoreScreenEvent.CardsImported(result))
+                    } catch (e: Exception) {
+                        _events.send(MoreScreenEvent.Error(e.message ?: "Failed to import cards"))
+                    }
+                }
+            }
         }
+    }
+
+    suspend fun copyToClipboard(text: String): Boolean {
+        return clipboardService.copyToClipboard(text)
     }
 }

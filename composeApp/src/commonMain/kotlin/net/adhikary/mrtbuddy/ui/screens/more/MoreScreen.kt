@@ -17,14 +17,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import mrtbuddy.composeapp.generated.resources.Res
 import mrtbuddy.composeapp.generated.resources.aboutHeader
 import mrtbuddy.composeapp.generated.resources.autoSaveCardDetails
@@ -44,6 +50,12 @@ import mrtbuddy.composeapp.generated.resources.settings
 import mrtbuddy.composeapp.generated.resources.stationMap
 import mrtbuddy.composeapp.generated.resources.station_map
 import net.adhikary.mrtbuddy.Language
+import net.adhikary.mrtbuddy.ui.components.ExportImportOptionsDialog
+import net.adhikary.mrtbuddy.ui.components.ExportSuccessDialog
+import net.adhikary.mrtbuddy.ui.components.ImportLoadingDialog
+import net.adhikary.mrtbuddy.ui.components.ImportResultDialog
+import net.adhikary.mrtbuddy.ui.components.JsonImportDialog
+import net.adhikary.mrtbuddy.ui.components.JsonDisplayDialog
 import net.adhikary.mrtbuddy.ui.screens.more.MoreScreenAction
 import net.adhikary.mrtbuddy.ui.screens.more.MoreScreenEvent
 import net.adhikary.mrtbuddy.ui.screens.more.MoreScreenViewModel
@@ -61,6 +73,17 @@ fun MoreScreen(
     val uriHandler = LocalUriHandler.current
     val uiState by viewModel.state.collectAsState()
 
+    // State for dialogs
+    var showExportImportDialog by remember { mutableStateOf(false) }
+    var showExportSuccessDialog by remember { mutableStateOf(false) }
+    var showJsonDisplayDialog by remember { mutableStateOf(false) }
+    var showImportLoadingDialog by remember { mutableStateOf(false) }
+    var showJsonImportDialog by remember { mutableStateOf(false) }
+    var exportData by remember { mutableStateOf("") }
+    var importResult by remember { mutableStateOf<net.adhikary.mrtbuddy.repository.ImportResult?>(null) }
+    var isCopying by remember { mutableStateOf(false) }
+    var copySuccess by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.onAction(MoreScreenAction.OnInit)
     }
@@ -76,6 +99,17 @@ fun MoreScreen(
                 }
                 is MoreScreenEvent.NavigateToLicenses -> {
                     onNavigateToLicenses()
+                }
+                is MoreScreenEvent.CardsExported -> {
+                    exportData = event.jsonData
+                    showExportSuccessDialog = true
+                }
+                is MoreScreenEvent.CardsImported -> {
+                    importResult = event.result
+                    showImportLoadingDialog = false
+                }
+                is MoreScreenEvent.ShowImportDialog -> {
+                    showExportImportDialog = true
                 }
             }
         }
@@ -129,6 +163,14 @@ fun MoreScreen(
                 painter = painterResource(Res.drawable.station_map),
                 onClick = {
                     viewModel.onAction(MoreScreenAction.StationMap)
+                }
+            )
+
+            RoundedButton(
+                text = "Export/Import Cards",
+                painter = painterResource(Res.drawable.license), // Using license icon as placeholder
+                onClick = {
+                    showExportImportDialog = true
                 }
             )
 
@@ -188,6 +230,83 @@ fun MoreScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
+    }
+
+    // Export/Import Dialogs
+    if (showExportImportDialog) {
+        ExportImportOptionsDialog(
+            onExport = {
+                showExportImportDialog = false
+                viewModel.onAction(MoreScreenAction.ExportCards)
+            },
+            onImport = {
+                showExportImportDialog = false
+                showJsonImportDialog = true
+            },
+            onDismiss = {
+                showExportImportDialog = false
+            }
+        )
+    }
+
+    if (showExportSuccessDialog) {
+        ExportSuccessDialog(
+            jsonData = exportData,
+            onDismiss = { showExportSuccessDialog = false },
+            onShare = {
+                showExportSuccessDialog = false
+                showJsonDisplayDialog = true
+            },
+            onSave = {
+                showExportSuccessDialog = false
+            }
+        )
+    }
+
+    if (showImportLoadingDialog) {
+        ImportLoadingDialog()
+    }
+
+    importResult?.let { result ->
+        ImportResultDialog(
+            result = result,
+            onDismiss = {
+                importResult = null
+            }
+        )
+    }
+
+    if (showJsonImportDialog) {
+        JsonImportDialog(
+            onImport = { jsonData ->
+                showJsonImportDialog = false
+                showImportLoadingDialog = true
+                viewModel.onAction(MoreScreenAction.ImportCards(jsonData))
+            },
+            onDismiss = {
+                showJsonImportDialog = false
+            }
+        )
+    }
+
+    if (showJsonDisplayDialog) {
+        JsonDisplayDialog(
+            jsonData = exportData,
+            isCopying = isCopying,
+            copySuccess = copySuccess,
+            onCopy = {
+                isCopying = true
+                copySuccess = false
+                kotlinx.coroutines.GlobalScope.launch {
+                    val success = viewModel.copyToClipboard(exportData)
+                    isCopying = false
+                    copySuccess = success
+                }
+            },
+            onDismiss = {
+                showJsonDisplayDialog = false
+            }
+        )
     }
 }
 

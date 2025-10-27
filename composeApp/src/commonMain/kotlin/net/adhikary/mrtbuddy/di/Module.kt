@@ -2,8 +2,10 @@ package net.adhikary.mrtbuddy.di
 
 import com.russhwolf.settings.Settings
 import net.adhikary.mrtbuddy.database.AppDatabase
+import net.adhikary.mrtbuddy.repository.CardExportRepository
 import net.adhikary.mrtbuddy.repository.SettingsRepository
 import net.adhikary.mrtbuddy.repository.TransactionRepository
+import net.adhikary.mrtbuddy.service.ClipboardService
 import net.adhikary.mrtbuddy.settings.createSettings
 import net.adhikary.mrtbuddy.ui.screens.farecalculator.FareCalculatorViewModel
 import net.adhikary.mrtbuddy.ui.screens.history.HistoryScreenState
@@ -30,6 +32,11 @@ val appModule = module {
         scanDao = get(),
         transactionDao = get()
     ) }
+    single { CardExportRepository(
+        cardDao = get(),
+        transactionDao = get()
+    ) }
+    single { ClipboardService() }
 
     viewModel { parameters -> 
         TransactionListViewModel(
@@ -54,7 +61,9 @@ val appModule = module {
 
     viewModel {
         MoreScreenViewModel(
-            settingsRepository = get()
+            settingsRepository = get(),
+            cardExportRepository = get(),
+            clipboardService = get()
         )
     }
 
